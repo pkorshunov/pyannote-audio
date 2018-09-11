@@ -45,13 +45,15 @@ class SpeechSegmentGenerator(object):
     ----------
     feature_extraction : `pyannote.audio.features.FeatureExtraction`
         Feature extraction.
+    normalize : bool, optional
+        Apply sequence-wise feature normalization. Defaults to False.
     per_label : int, optional
         Number of speech turns per speaker in each batch. Defaults to 3.
+    per_fold : int, optional
+        Number of speakers in each batch. Defaults to all speakers.
     label_min_duration : float, optional
         Remove speakers with less than `label_min_duration` seconds of speech.
         Defaults to 0 (i.e. keep it all).
-    per_fold : int, optional
-        Number of speakers in each batch. Defaults to all speakers.
     duration : float, optional
         Use fixed duration segments with this `duration`.
         Defaults (None) to using variable duration segments.
@@ -65,19 +67,21 @@ class SpeechSegmentGenerator(object):
         Set `parallel` to 0 to not use background generators.
     """
 
-    def __init__(self, feature_extraction,
-                 per_label=3, per_fold=None,
+    def __init__(self, feature_extraction, normalize=False,
+                 per_label=3, per_fold=None, label_min_duration=0.,
                  duration=None, min_duration=None, max_duration=None,
-                 label_min_duration=0., parallel=1):
+                 parallel=1):
 
         super(SpeechSegmentGenerator, self).__init__()
 
         self.feature_extraction = feature_extraction
+        self.normalize = normalize
+
         self.per_label = per_label
         self.per_fold = per_fold
-        self.duration = duration
-        self.parallel = parallel
         self.label_min_duration = label_min_duration
+
+        self.duration = duration
 
         if self.duration is None:
             self.min_duration = min_duration
@@ -89,6 +93,7 @@ class SpeechSegmentGenerator(object):
         self.min_duration_ = 0. if self.min_duration is None \
                                 else self.min_duration
 
+        self.parallel = parallel
         self.weighted_ = True
 
     def initialize(self, protocol, subset='train'):
@@ -155,6 +160,18 @@ class SpeechSegmentGenerator(object):
         self.domains_['database'] = {db: i for i, db in enumerate(databases)}
 
     def generator(self):
+        """
+
+        Returns
+        -------
+        batch : `dict`
+            ['X'] (`numpy.ndarray`) features (n_samples, n_dimensions)
+            ['y'] (`int`) speaker index
+            ['y_database'] (`int`) database index
+            ['extra'] (`dict`)
+                ['label'] (`str`) human-readable speaker label
+                ['database'] (`str`) human-readable database label
+        """
 
         labels = list(self.data_)
 
@@ -239,6 +256,12 @@ class SpeechSegmentGenerator(object):
                     database = files[i]['database']
                     extra = {'label': label,
                              'database': database}
+
+                    if self.normalize:
+                        mu = np.mean(X, axis=0, keepdims=True)
+                        sigma = np.std(X, axis=0, ddof=1, keepdims=True)
+                        sigma[sigma == 0.] = 1e-6
+                        X = (X - mu) / sigma
 
                     yield {'X': X,
                            'y': self.labels_[label],

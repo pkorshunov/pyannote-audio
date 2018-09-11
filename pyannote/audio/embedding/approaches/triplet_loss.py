@@ -327,12 +327,14 @@ class TripletLoss(Trainer):
         else:
             return loss
 
-    def get_batch_generator(self, feature_extraction):
+    def get_batch_generator(self, feature_extraction, normalize=False):
         """Get batch generator
 
         Parameters
         ----------
         feature_extraction : `pyannote.audio.features.FeatureExtraction`
+        normalize : bool, optional
+            Apply sequence-wise feature normalization. Defaults to False.
 
         Returns
         -------
@@ -340,7 +342,8 @@ class TripletLoss(Trainer):
 
         """
         return SpeechSegmentGenerator(
-            feature_extraction, label_min_duration=self.label_min_duration,
+            feature_extraction, normalize=normalize,
+            label_min_duration=self.label_min_duration,
             per_label=self.per_label, per_fold=self.per_fold,
             duration=self.duration, min_duration=self.min_duration,
             max_duration=self.max_duration, parallel=self.parallel)

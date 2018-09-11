@@ -44,6 +44,8 @@ class SequenceEmbedding(SequenceLabeling):
         Pre-trained sequence embedding model.
     feature_extraction : callable
         Feature extractor
+    normalize : bool, optional
+        Apply sequence-wise feature normalization. Defaults to False.
     duration : float, optional
         Subsequence duration, in seconds. Defaults to 1s.
     min_duration : float, optional
@@ -58,12 +60,12 @@ class SequenceEmbedding(SequenceLabeling):
         Defaults to CPU.
     """
 
-    def __init__(self, model, feature_extraction, duration=1,
+    def __init__(self, model, feature_extraction, normalize=False, duration=1,
                  min_duration=None, step=None, batch_size=32, source='audio',
                  device=None):
 
         super(SequenceEmbedding, self).__init__(
-            model, feature_extraction, duration=duration,
+            model, feature_extraction, normalize=normalize, duration=duration,
             min_duration=min_duration, step=step, source=source,
             batch_size=batch_size, device=device)
 

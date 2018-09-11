@@ -176,7 +176,8 @@ class Trainer:
         return tensor.detach().to(cpu).numpy()
 
     def fit(self, model, feature_extraction,
-            protocol, subset='train', augmentation=None,
+            protocol, subset='train',
+            augmentation=None, normalize=False,
             restart=0, epochs=1000,
             get_optimizer=None, get_scheduler=None, learning_rate='auto',
             log_dir=None, device=None):
@@ -188,6 +189,8 @@ class Trainer:
             Sequence labeling/embedding model.
         feature_extraction : pyannote.audio.features.FeatureExtraction
             Feature extraction
+        normalize : bool, optional
+            Apply sequence-wise feature normalization. Defaults to False.
         protocol : pyannote.database.Protocol
             Evaluation protocol.
         subset : {'train', 'development', 'test'}, optional
@@ -221,7 +224,8 @@ class Trainer:
 
         iterations = self.fit_iter(
             model, feature_extraction,
-            protocol, subset=subset, augmentation=augmentation,
+            protocol, subset=subset,
+            augmentation=augmentation, normalize=normalize,
             restart=restart, epochs=epochs,
             get_optimizer=get_optimizer, get_scheduler=get_scheduler,
             learning_rate=learning_rate, log_dir=log_dir, device=device)
@@ -376,7 +380,8 @@ class Trainer:
 
 
     def fit_iter(self, model, feature_extraction,
-                 protocol, subset='train', augmentation=None,
+                 protocol, subset='train',
+                 augmentation=None, normalize=False,
                  restart=0, epochs=1000,
                  get_optimizer=None, get_scheduler=None, learning_rate='auto',
                  log_dir=None, device=None):
@@ -388,6 +393,8 @@ class Trainer:
             Sequence labeling/embedding model.
         feature_extraction : pyannote.audio.features.FeatureExtraction
             Feature extraction
+        normalize : bool, optional
+            Apply sequence-wise feature normalization. Defaults to False.
         protocol : pyannote.database.Protocol
             Evaluation protocol.
         subset : {'train', 'development', 'test'}, optional
@@ -440,7 +447,8 @@ class Trainer:
                 feature_extraction.augmentation = augmentation
 
         # initialize batch generator
-        batch_generator = self.get_batch_generator(feature_extraction)
+        batch_generator = self.get_batch_generator(feature_extraction,
+                                                   normalize=normalize)
         batches = batch_generator(protocol, subset=subset)
         batch = next(batches)
 

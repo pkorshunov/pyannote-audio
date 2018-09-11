@@ -31,6 +31,7 @@ import warnings
 import numpy as np
 from pyannote.core import Segment
 from pyannote.audio.features import Precomputed
+from pyannote.audio.features.normalization import standardize
 from pyannote.generators.fragment import random_segment
 from pyannote.generators.fragment import random_subsegment
 from pyannote.generators.batch import batchify, EndOfBatch
@@ -258,10 +259,7 @@ class SpeechSegmentGenerator(object):
                              'database': database}
 
                     if self.normalize:
-                        mu = np.mean(X, axis=0, keepdims=True)
-                        sigma = np.std(X, axis=0, ddof=1, keepdims=True)
-                        sigma[sigma == 0.] = 1e-6
-                        X = (X - mu) / sigma
+                        X = standardize(X)
 
                     yield {'X': X,
                            'y': self.labels_[label],

@@ -214,7 +214,6 @@ class SpeakerEmbedding(Application):
         self.task_ = Approach(
             **self.config_['approach'].get('params', {}))
 
-
     def validate_init(self, protocol_name, subset='development'):
 
         task = protocol_name.split('.')[1]
@@ -255,7 +254,7 @@ class SpeakerEmbedding(Application):
                                 preprocessors=self.preprocessors_)
 
         batch_generator = SpeechTurnSubSegmentGenerator(
-            self.feature_extraction_, self.duration,
+            self.feature_extraction_, self.duration, normalize=self.normalize_,
             per_label=10, per_turn=5)
         batch = next(batch_generator(protocol, subset=subset))
 
@@ -289,7 +288,8 @@ class SpeakerEmbedding(Application):
                                 preprocessors=self.preprocessors_)
 
         batch_generator = SpeechSegmentGenerator(
-            self.feature_extraction_, per_label=10, duration=self.duration)
+            self.feature_extraction_, normalize=self.normalize_,
+            per_label=10, duration=self.duration)
         batch = next(batch_generator(protocol, subset=subset))
 
         X = np.stack(batch['X'])
@@ -504,8 +504,9 @@ class SpeakerEmbedding(Application):
 
         # initialize embedding extraction
         sequence_embedding = SequenceEmbedding(
-            model, self.feature_extraction_, duration=duration,
-            step=step, batch_size=self.batch_size, device=self.device)
+            model, self.feature_extraction_, normalize=self.normalize_,
+            duration=duration, step=step, batch_size=self.batch_size,
+            device=self.device)
         sliding_window = sequence_embedding.sliding_window
         dimension = sequence_embedding.dimension
 

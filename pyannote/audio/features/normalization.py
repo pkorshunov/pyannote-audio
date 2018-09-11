@@ -32,6 +32,24 @@ import pandas as pd
 from pyannote.core import SlidingWindowFeature
 
 
+def standardize(X):
+    """Standardize sequence of features
+
+    Parameter
+    ---------
+    X : (n_samples, n_features) `numpy.ndarray`
+        Sequence of features.
+
+    Returns
+    -------
+    nX : (n_samples, n_features) `numpy.ndarray`
+        Normalized sequence of features.
+    """
+
+    mu = np.mean(X, axis=0, keepdims=True)
+    sigma = np.std(X, axis=0, ddof=1, keepdims=True)
+    sigma[sigma == 0.] = 1e-6
+    return (X - mu) / sigma
 class ShortTermStandardization(object):
     """Short term mean/variance normalization
 

@@ -112,7 +112,7 @@ class Application(object):
         optimizer_params = optimizer_cfg.get('params', {})
         self.get_optimizer_ = partial(Optimizer, **optimizer_params)
 
-        # feature extraction
+        # feature extraction (and normalization)
         extraction_name = None
         if 'feature_extraction' in self.config_:
             extraction_name = self.config_['feature_extraction']['name']
@@ -121,6 +121,13 @@ class Application(object):
             FeatureExtraction = getattr(features, extraction_name)
             self.feature_extraction_ = FeatureExtraction(
                 **self.config_['feature_extraction'].get('params', {}))
+
+            # sequence normalization
+            if 'normalize' in self.config_['feature_extraction']:
+                normalize = self.config_['feature_extraction']['normalize']
+            else:
+                normalize = False
+            self.normalize_ = normalize
 
         if 'data_augmentation' in self.config_:
             augmentation_name = self.config_['data_augmentation']['name']
@@ -132,7 +139,6 @@ class Application(object):
 
         else:
             self.augmentation_ = None
-
 
     def train(self, protocol_name, subset='train', restart=None, epochs=1000):
 

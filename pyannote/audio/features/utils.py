@@ -272,7 +272,6 @@ class RawAudio(object):
         --------
         `pyannote.core.SlidingWindowFeature.crop`
         """
-
         if self.sample_rate is None:
             msg = ('`RawAudio` needs to be instantiated with an actual '
                    '`sample_rate` if one wants to use `crop`.')

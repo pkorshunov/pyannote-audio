@@ -28,6 +28,9 @@
 
 from typing import Optional
 from pathlib import Path
+import os
+import math
+
 from tqdm import tqdm
 from .base import Application
 from pyannote.database import FileFinder
@@ -129,7 +132,26 @@ class BaseLabeling(Application):
         protocol = get_protocol(protocol_name, progress=True,
                                 preprocessors=self.preprocessors_)
 
-        for current_file in getattr(protocol, subset)():
+        if subset is None:
+            files = FileFinder.protocol_file_iter(protocol,
+                                                  extra_keys=['audio'])
+        else:
+            files = getattr(protocol, subset)()
+
+        sge_task_id = os.getenv("SGE_TASK_ID")
+        # if we have SGE grid, find the subset of files 
+        # corresponding to the current job on the grid
+        if sge_task_id:
+            # find length of the files 
+            files = list(files)
+            number_of_parallel_jobs = 24
+            job_id = int(sge_task_id) - 1
+            number_of_files_per_job = int(math.ceil(float(len(files)) / number_of_parallel_jobs))
+            start = job_id * number_of_files_per_job
+            end = min((job_id + 1) * number_of_files_per_job, len(files))
+            files = files[start: end]
+
+        for current_file in files:
             fX = sequence_labeling(current_file)
             precomputed.dump(current_file, fX)
 

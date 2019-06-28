@@ -187,7 +187,14 @@ class AddNoiseFromGaps(Augmentation):
         else:
             protocol.preprocessors['gaps'] = get_gaps
 
-        self.files_ = list(getattr(protocol, self.subset)())
+        protocol = get_protocol(self.protocol,
+                                preprocessors=preprocessors)
+        if isinstance(self.subset, list):
+             self.files_ = list()
+             for subs in self.subset:
+                self.files_ += list(getattr(protocol, subs)())
+        else:
+            self.files_ = list(getattr(protocol, self.subset)())
 
     def __call__(self, original, sample_rate):
         """Augment original waveform

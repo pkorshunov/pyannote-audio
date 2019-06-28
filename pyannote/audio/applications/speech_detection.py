@@ -220,7 +220,6 @@ class SpeechActivityDetection(BaseLabeling):
                                                   'pad_onset': 0.,
                                                   'pad_offset': 0.})}
 
-
 def main():
     arguments = docopt(__doc__, version='Speech activity detection')
 

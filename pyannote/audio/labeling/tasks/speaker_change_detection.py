@@ -119,7 +119,7 @@ class SpeakerChangeDetectionGenerator(LabelingTaskGenerator):
         n_samples, n_speakers = Y.shape
 
         # True = change. False = no change
-        y = np.sum(np.abs(np.diff(Y, axis=0)), axis=1, keepdims=True)
+        y = np.sum(np.abs(np.diff(Y, axis=0)), axis=1, keepdims=True, dtype=Y.dtype)
         y = np.vstack(([[0]], y > 0))
 
         # mark change points neighborhood as positive
@@ -134,7 +134,6 @@ class SpeakerChangeDetectionGenerator(LabelingTaskGenerator):
 
         # remove non-speech/speaker change
         if not self.non_speech:
-
             # append (half collar) empty samples at the beginning/end
             expanded_Y = np.vstack([
                 np.zeros(((self.collar_ + 1) // 2 , n_speakers), dtype=Y.dtype),
@@ -147,9 +146,11 @@ class SpeakerChangeDetectionGenerator(LabelingTaskGenerator):
                 shape=(n_samples, n_speakers, self.collar_),
                 strides=(Y.strides[0], Y.strides[1], Y.strides[0]))
 
+            del expanded_Y
+
             # y[i] = 1 if more than one speaker are speaking in the
             # corresponding window. 0 otherwise
-            x_speakers = 1 * (np.sum(np.sum(data, axis=2) > 0, axis=1) > 1)
+            x_speakers = np.array((np.sum(np.sum(data, axis=2) > 0, axis=1) > 1), dtype=np.int8)
             x_speakers = x_speakers.reshape(-1, 1)
 
             y *= x_speakers

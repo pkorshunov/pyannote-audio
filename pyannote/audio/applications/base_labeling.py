@@ -138,13 +138,14 @@ class BaseLabeling(Application):
         else:
             files = getattr(protocol, subset)()
 
-        sge_task_id = os.getenv("SGE_TASK_ID")
+        # sge_task_id = os.getenv("SGE_TASK_ID")
+        sge_task_id = 0
         # if we have SGE grid, find the subset of files 
         # corresponding to the current job on the grid
         if sge_task_id:
             # find length of the files 
             files = list(files)
-            number_of_parallel_jobs = 24
+            number_of_parallel_jobs = 12
             job_id = int(sge_task_id) - 1
             number_of_files_per_job = int(math.ceil(float(len(files)) / number_of_parallel_jobs))
             start = job_id * number_of_files_per_job
@@ -154,7 +155,8 @@ class BaseLabeling(Application):
         for current_file in files:
             fX = sequence_labeling(current_file)
             precomputed.dump(current_file, fX)
-
+        if not sge_task_id:
+            files = getattr(protocol, subset)()
         # do not proceed with the full pipeline
         # when there is no such thing for current task
         if not hasattr(self, 'pipeline_params_'):
@@ -173,7 +175,7 @@ class BaseLabeling(Application):
         # apply pipeline and dump output to RTTM files
         output_rttm = output_dir / f'{protocol_name}.{subset}.rttm'
         with open(output_rttm, 'w') as fp:
-            for current_file in getattr(protocol, subset)():
+            for current_file in files:
                 hypothesis = pipeline(current_file)
                 pipeline.write_rttm(fp, hypothesis)
 

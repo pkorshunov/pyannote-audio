@@ -255,7 +255,10 @@ class LabelingTaskGenerator(object):
 
         for current_file in getattr(protocol, subset)():
             uri = get_unique_identifier(current_file)
-            self.data_[uri]['y'] = self.initialize_y(current_file)
+            try:
+                self.data_[uri]['y'] = self.initialize_y(current_file)
+            except:
+                continue  # this is the case where there is no segments from above
 
     @property
     def signature(self):
@@ -332,7 +335,10 @@ class LabelingTaskGenerator(object):
                                              subsegment, mode='center',
                                              fixed=self.duration)
 
-            y = self.crop_y(datum['y'], subsegment)
+            try:
+                y = self.crop_y(datum['y'], subsegment)
+            except:
+                raise ValueError('Trying to access non-existing one-hot-encoding for uri: {}'.format(uri))
             sample = {'X': X, 'y': y}
 
             if self.mask_dimension is not None:

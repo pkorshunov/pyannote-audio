@@ -299,8 +299,8 @@ class Trainer:
             get_scheduler(),
         ]
 
-        if not quiet:
-            callbacks.append(Logging(epochs))
+#        if not quiet:
+#            callbacks.append(Logging(epochs))
 
         callbacks = Callbacks(callbacks)
 

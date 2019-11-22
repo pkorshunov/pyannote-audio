@@ -226,13 +226,18 @@ class Application(object):
                 # and you do not want to erase them by mistake :/
                 os.makedirs(weights_dir)
             except FileExistsError as e:
-                msg = (
-                    f'You are about to overwrite pretrained models in '
-                    f'"{weights_dir}" directory. If you want to train a new '
-                    f'model from scratch, first (backup and) remove the '
-                    f'directory.'
-                )
-                sys.exit(msg)
+                sge_task_id = os.getenv("SGE_TASK_ID")
+                if sge_task_id:
+                    weights_files = sorted([f for f in os.listdir(weights_dir) if f.endswith(".pt")])
+                    restart = int(weights_files[-1].split('.')[0])
+                else:
+                    msg = (
+                        f'You are about to overwrite pretrained models in '
+                        f'"{weights_dir}" directory. If you want to train a new '
+                        f'model from scratch, first (backup and) remove the '
+                        f'directory.'
+                    )
+                    sys.exit(msg)
 
         # initialize batch generator
         protocol = get_protocol(protocol_name, progress=True,
@@ -325,7 +330,7 @@ class Application(object):
             protocol=protocol_name, subset=subset))
 
         params_yml = validate_dir / 'params.yml'
-        validate_dir.mkdir(parents=True, exist_ok=False)
+        validate_dir.mkdir(parents=True, exist_ok=True)
 
         writer = tensorboardX.SummaryWriter(logdir=str(validate_dir))
 
